@@ -1,0 +1,1033 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>合唱パート練習ナビ</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Layout: score desk on the left (paper on a dark stage), rehearsal controls in a single column on the right. */
+:root{
+  --font-ui:'Zen Kaku Gothic New','Hiragino Kaku Gothic ProN','Yu Gothic',Meiryo,sans-serif;
+  --font-display:'Shippori Mincho B1','Hiragino Mincho ProN','Yu Mincho',serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#eceef6;--surface:#ffffff;--surface2:#f3f4fa;--fg:#1b1f33;--muted:#5a6180;--line:#d8dbe9;
+  --accent:#3846d1;--accent-fg:#ffffff;--accent-soft:#e1e4fb;--danger:#b4232f;
+  --paper:#ffffff;--stage:#cfd3e4;--on-p:#ffffff;
+  --pn:#5a6180;--p0:#5a6180;--p1:#c42b66;--p2:#a85f00;--p3:#087a6b;--p4:#6c42c4;--p5:#2a6fc0;
+  --shadow:0 1px 2px rgb(20 24 50/.08),0 4px 14px rgb(20 24 50/.06);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#11131f;--surface:#1a1d2e;--surface2:#232743;--fg:#e9ebf7;--muted:#a0a7c4;--line:#30355a;
+    --accent:#8e9aff;--accent-fg:#0f1230;--accent-soft:#2b3162;--danger:#ff8089;
+    --stage:#0b0c14;--on-p:#0f1230;
+    --pn:#a0a7c4;--p0:#a0a7c4;--p1:#ff7aa8;--p2:#ffb347;--p3:#43d9c2;--p4:#b99bff;--p5:#72b8ff;
+    --shadow:0 1px 2px rgb(0 0 0/.4),0 4px 14px rgb(0 0 0/.3);color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11131f;--surface:#1a1d2e;--surface2:#232743;--fg:#e9ebf7;--muted:#a0a7c4;--line:#30355a;
+  --accent:#8e9aff;--accent-fg:#0f1230;--accent-soft:#2b3162;--danger:#ff8089;
+  --stage:#0b0c14;--on-p:#0f1230;
+  --pn:#a0a7c4;--p0:#a0a7c4;--p1:#ff7aa8;--p2:#ffb347;--p3:#43d9c2;--p4:#b99bff;--p5:#72b8ff;
+  --shadow:0 1px 2px rgb(0 0 0/.4),0 4px 14px rgb(0 0 0/.3);color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 14px/1.5 var(--font-ui);
+  padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));overflow-x:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+button:disabled{opacity:.4;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+label:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.app{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr);gap:12px}
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px}
+.brand{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;min-width:0}
+h1{margin:0;font:700 21px/1.2 var(--font-display);letter-spacing:.03em;text-wrap:balance}
+#songTitle{width:min(260px,100%);padding:4px 2px;border:0;border-bottom:1px solid var(--line);background:transparent;font-size:15px}
+.top-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font:500 13px/1 var(--font-ui);white-space:nowrap}
+.btn:hover{background:var(--surface2)}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:transparent}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.small{padding:6px 10px;font-size:12px}
+.btn.danger{color:var(--danger)}
+.mini{display:grid;place-items:center;width:28px;height:28px;padding:0;border:1px solid var(--line);border-radius:6px;background:var(--surface);font:500 12px/1 var(--font-ui)}
+.mini:hover{background:var(--surface2)}
+.mini.del{color:var(--danger)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{padding:8px 14px;border:0;border-left:1px solid var(--line);background:transparent;font:500 13px/1 var(--font-ui)}
+.seg button:first-child{border-left:0}
+.seg button.on{background:var(--accent-soft);color:var(--accent);font-weight:700}
+.seg.wide{display:flex}
+.seg.wide button{flex:1;font-family:var(--font-mono);padding:9px 4px}
+.dot{display:inline-block;flex:none;width:10px;height:10px;border-radius:50%;background:var(--pc,var(--pn))}
+.sub{margin:0;font-size:12px;color:var(--muted)}
+.pad{padding:12px 14px}
+
+.main{display:grid;grid-template-columns:minmax(0,1fr) 344px;gap:12px;min-height:0}
+.viewer{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.vbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:8px 12px;border-bottom:1px solid var(--line)}
+.grp{display:flex;align-items:center;gap:6px}
+.plabel{min-width:52px;text-align:center;font:500 13px var(--font-mono);font-variant-numeric:tabular-nums}
+.hint{padding:8px 12px;font-size:12.5px;background:var(--accent-soft);border-bottom:1px solid var(--line)}
+.scroller{position:relative;flex:1;min-height:0;overflow:auto;background:var(--stage);padding:12px}
+.sheet{position:relative;margin:0 auto;background:var(--paper);box-shadow:var(--shadow)}
+.sheet img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none}
+.pinlayer{position:absolute;inset:0;cursor:pointer}
+body.mode-edit .pinlayer{cursor:crosshair}
+.pin{position:absolute;transform:translate(-50%,-50%);min-width:22px;height:22px;padding:0 6px;border:2px solid var(--paper);border-radius:11px;background:var(--pc,var(--pn));color:var(--on-p);font:600 11px/18px var(--font-mono);white-space:nowrap;box-shadow:0 1px 3px rgb(0 0 0/.4);touch-action:none}
+body.mode-edit .pin{cursor:grab}
+.pin.is-sel{outline:2px dashed var(--accent);outline-offset:3px}
+.pin.is-active{outline:3px solid var(--accent);outline-offset:2px;z-index:2}
+.empty{position:absolute;inset:0;display:grid;place-items:center;padding:24px;overflow:auto}
+.empty-in{width:min(460px,100%);padding:26px 28px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.empty-in h2{margin:0 0 14px;font:700 19px/1.3 var(--font-display);text-wrap:balance}
+.empty-in ol{margin:0 0 18px;padding-left:20px;display:grid;gap:8px}
+
+.side{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.sec{padding:12px 14px;border-top:1px solid var(--line)}
+.sec:first-child{border-top:0}
+.sec h2{margin:0 0 8px;font:700 11px/1 var(--font-ui);letter-spacing:.1em;color:var(--muted)}
+.parts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.partbtn{display:flex;align-items:center;gap:8px;min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font:500 13px/1.2 var(--font-ui);text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.partbtn.on{border-color:var(--pc);background:color-mix(in srgb,var(--pc) 14%,var(--surface));font-weight:700}
+.partbtn.nofile{opacity:.5}
+.transport{display:flex;align-items:center;gap:10px}
+.play{display:grid;place-items:center;width:52px;height:52px;padding:0;border:0;border-radius:50%;background:var(--accent);color:var(--accent-fg)}
+.play:hover{filter:brightness(1.1)}
+.skip{width:42px;height:34px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font:500 12px var(--font-mono)}
+.skip:hover{background:var(--surface2)}
+.time{margin-left:auto;font:500 15px var(--font-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.time .sl{margin:0 4px;color:var(--muted)}
+.seekwrap{position:relative;height:32px;margin-top:10px}
+.track{position:absolute;left:8px;right:8px;top:0;height:100%;pointer-events:none}
+.loopbar{position:absolute;top:7px;height:8px;border-radius:4px;background:color-mix(in srgb,var(--accent) 30%,transparent)}
+.ticks i{position:absolute;top:24px;width:3px;height:7px;margin-left:-1px;border-radius:1px;background:var(--pn)}
+#seek{position:relative;display:block;width:100%;height:22px;margin:0;accent-color:var(--accent)}
+.looprow{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.loopread{flex-basis:100%;margin-top:6px;font:500 12px var(--font-mono);color:var(--muted)}
+.chk{display:flex;align-items:center;gap:8px;font-size:13px}
+.chk input{width:16px;height:16px;margin:0;accent-color:var(--accent)}
+.pinsec{flex:1;display:flex;flex-direction:column;min-height:180px;padding:0}
+.pinhead{display:flex;align-items:baseline;gap:10px;padding:12px 14px 8px}
+.pinhead h2{margin:0}
+.pinhead .link{margin-left:auto;padding:2px 0;border:0;background:none;color:var(--danger);font-size:12px}
+.pinlist{flex:1;min-height:0;overflow:auto}
+.prow-pin{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:8px;width:100%;padding:8px 14px;border:0;border-top:1px solid var(--line);background:transparent;text-align:left;font:inherit}
+.prow-pin:hover{background:var(--surface2)}
+.prow-pin.is-active{background:color-mix(in srgb,var(--accent) 12%,var(--surface))}
+.prow-pin.is-sel .pl{text-decoration:underline;text-underline-offset:3px}
+.pl{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pt{font:500 12px var(--font-mono);font-variant-numeric:tabular-nums;color:var(--muted)}
+.pm{font-size:12px;color:var(--muted);white-space:nowrap}
+.prow-pin.edit{grid-template-columns:auto 56px minmax(0,1fr) auto auto;grid-template-areas:"d l t n g" "d s s p x";row-gap:6px;cursor:default}
+.prow-pin.edit .dot{grid-area:d}
+.prow-pin.edit .in-label{grid-area:l}
+.prow-pin.edit .in-time{grid-area:t}
+.prow-pin.edit [data-act="now"]{grid-area:n}
+.prow-pin.edit [data-act="go"]{grid-area:g}
+.prow-pin.edit select{grid-area:s}
+.prow-pin.edit .pm{grid-area:p;text-align:right}
+.prow-pin.edit [data-act="del"]{grid-area:x}
+.in-label,.in-time,.prow-pin select,.pname{min-width:0;width:100%;padding:5px 6px;border:1px solid var(--line);border-radius:6px;background:var(--surface2);font:500 12px var(--font-mono)}
+.keys{margin:0;padding:10px 14px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted)}
+
+.overlay{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgb(10 12 30/.55);
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.dlg{width:min(640px,100%);max-height:100%;overflow:auto;padding:18px 20px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.dlg-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.dlg-h h2{margin:0;font:700 18px/1.3 var(--font-display)}
+.dlg-f{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.drop{display:grid;justify-items:center;gap:10px;padding:22px 16px;text-align:center;border:2px dashed var(--line);border-radius:12px;background:var(--surface2)}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop p{margin:0}
+.dsec{margin-top:16px}
+.dsec-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-bottom:6px}
+.dsec-h h3{margin:0;font:700 14px var(--font-ui)}
+.dsec-h .grow{margin-left:auto}
+.prow{display:grid;grid-template-columns:auto 110px minmax(0,1fr) auto auto;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line)}
+.pstat{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.pstat.miss{color:var(--muted)}
+.pname{font-family:var(--font-ui);font-size:13px}
+#jsonText{display:block;width:100%;height:min(46vh,340px);padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--surface2);font:400 12px/1.5 var(--font-mono);resize:vertical}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:80;max-width:min(92vw,520px);padding:10px 16px;border-radius:10px;background:var(--fg);color:var(--bg);font-size:13px;opacity:0;transform:translate(-50%,16px);pointer-events:none;transition:opacity .2s,transform .2s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+body:not(.mode-edit) .edit-only{display:none!important}
+.focus-only{display:none!important}
+body.focus .focus-only{display:inline-flex!important}
+body.focus .top,body.focus .opt,body.focus .pinsec,body.focus .keys{display:none}
+body.focus .app{grid-template-rows:minmax(0,1fr)}
+body.focus .main{grid-template-columns:minmax(0,1fr) 290px}
+
+@media (max-width:900px){
+  html,body{height:auto}
+  .app{height:auto;display:block}
+  .top{margin-bottom:12px}
+  .main{grid-template-columns:minmax(0,1fr)}
+  .viewer{height:72vh}
+  .side{overflow:visible}
+  .prow{grid-template-columns:auto minmax(0,1fr) auto auto}
+  .prow .pstat{grid-column:2/-1;order:5}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+
+</head>
+<body>
+<div class="app" id="app">
+  <header class="top">
+    <div class="brand">
+      <h1>合唱パート練習ナビ</h1>
+      <input id="songTitle" type="text" placeholder="曲名を入力" aria-label="曲名" maxlength="60">
+    </div>
+    <div class="top-actions">
+      <div class="seg" role="group" aria-label="モード">
+        <button type="button" id="modePractice" class="on">練習</button>
+        <button type="button" id="modeEdit">ピン編集</button>
+      </div>
+      <button type="button" class="btn" id="btnFiles">ファイル</button>
+      <button type="button" class="btn" id="btnJsonSave">JSON保存</button>
+      <button type="button" class="btn" id="btnJsonLoad">JSON読込</button>
+      <button type="button" class="btn primary" id="btnFocus">全画面で練習</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="viewer" aria-label="楽譜">
+      <div class="vbar">
+        <div class="grp">
+          <button type="button" class="mini" id="btnPrev" aria-label="前のページ"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <span class="plabel" id="pageLabel">– / –</span>
+          <button type="button" class="mini" id="btnNext" aria-label="次のページ"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+        </div>
+        <div class="grp">
+          <button type="button" class="btn small" id="zFit">全体表示</button>
+          <button type="button" class="btn small" id="zWidth">幅に合わせる</button>
+          <button type="button" class="mini" id="zOut" aria-label="縮小">−</button>
+          <span class="plabel" id="zLabel">100%</span>
+          <button type="button" class="mini" id="zIn" aria-label="拡大">＋</button>
+        </div>
+        <button type="button" class="btn small edit-only" id="btnAddPin">現在位置でピン追加</button>
+        <button type="button" class="btn small focus-only" id="btnExitFocus" style="margin-left:auto">全画面を終了</button>
+      </div>
+      <div class="hint edit-only">再生位置を合わせてから、楽譜の小節をクリックするとピンが付きます。ピンはドラッグで動かせます。</div>
+      <div class="scroller" id="scroller">
+        <div class="sheet" id="sheet" hidden>
+          <img id="scoreImg" alt="楽譜" draggable="false">
+          <div class="pinlayer" id="pinLayer"></div>
+        </div>
+        <div class="empty" id="empty">
+          <div class="empty-in">
+            <h2>楽譜と音源を読み込みましょう</h2>
+            <ol>
+              <li>楽譜の画像（PNG・JPG）と、パート別の音源（MP3・M4A・WAV）を選びます。</li>
+              <li>先生からJSONをもらっている場合は、「JSON読込」で小節の位置を取り込みます。</li>
+              <li>楽譜の小節をクリックすると、その小節から再生されます。</li>
+            </ol>
+            <button type="button" class="btn primary" id="btnEmptyFiles">楽譜と音源を選ぶ</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="side" id="side" aria-label="再生コントロール">
+      <section class="sec">
+        <h2>練習パート</h2>
+        <div class="parts" id="partBar" role="radiogroup" aria-label="練習パート"></div>
+      </section>
+      <section class="sec">
+        <div class="transport">
+          <button type="button" class="skip" id="btnBack" title="5秒戻る（←）">−5</button>
+          <button type="button" class="play" id="btnPlay" aria-label="再生">
+            <svg id="icoPlay" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>
+            <svg id="icoPause" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" hidden><rect x="6" y="5" width="4.5" height="14" rx="1"/><rect x="13.5" y="5" width="4.5" height="14" rx="1"/></svg>
+          </button>
+          <button type="button" class="skip" id="btnFwd" title="5秒進む（→）">+5</button>
+          <div class="time"><span id="tcur">0:00</span><span class="sl">/</span><span id="tdur">0:00</span></div>
+        </div>
+        <div class="seekwrap">
+          <div class="track"><div class="loopbar" id="loopBar" hidden></div><div class="ticks" id="ticks"></div></div>
+          <input type="range" id="seek" min="0" max="1000" step="1" value="0" aria-label="再生位置">
+        </div>
+      </section>
+      <section class="sec">
+        <h2>速度</h2>
+        <div class="seg wide" id="speedBar" role="group" aria-label="再生速度">
+          <button type="button" data-speed="0.5">0.5x</button>
+          <button type="button" data-speed="0.75">0.75x</button>
+          <button type="button" data-speed="1" class="on">1.0x</button>
+          <button type="button" data-speed="1.25">1.25x</button>
+        </div>
+      </section>
+      <section class="sec">
+        <h2>くり返し</h2>
+        <div class="looprow">
+          <button type="button" class="btn small" id="loopA">A 開始</button>
+          <button type="button" class="btn small" id="loopB">B 終了</button>
+          <button type="button" class="btn small" id="loopClear">解除</button>
+          <label class="chk" style="margin-left:auto"><input type="checkbox" id="chkSection">ピン区間をくり返す</label>
+          <div class="loopread" id="loopRead">ループなし</div>
+        </div>
+      </section>
+      <section class="sec opt">
+        <label class="chk"><input type="checkbox" id="chkFollow" checked>再生に合わせてページをめくる</label>
+      </section>
+      <section class="sec pinsec">
+        <div class="pinhead">
+          <h2>ピン一覧</h2><span class="sub" id="pinCount"></span>
+          <button type="button" class="link edit-only" id="btnClearPins">すべて削除</button>
+        </div>
+        <div class="pinlist" id="pinList"></div>
+      </section>
+      <p class="keys">Space 再生/停止 ・ ←→ 5秒 ・ [ ] ページ ・ 1〜4 速度</p>
+    </aside>
+  </main>
+</div>
+
+<div class="overlay" id="dlgFiles" hidden>
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgFilesT" tabindex="-1">
+    <div class="dlg-h"><h2 id="dlgFilesT">楽譜と音源</h2><button type="button" class="btn small" data-close>閉じる</button></div>
+    <div class="drop" id="dropZone">
+      <p><strong>楽譜の画像と音源を、まとめてここにドロップ</strong></p>
+      <label class="btn primary">ファイルを選ぶ<input type="file" id="inAll" multiple accept="image/*,audio/*,.mp3,.m4a,.wav,.aac,.ogg,.flac" hidden></label>
+      <p class="sub">画像は名前順にページになります。音源はファイル名のパート名（ソプラノ・アルトなど）で振り分けます。</p>
+    </div>
+    <div class="dsec">
+      <div class="dsec-h"><h3>楽譜</h3><span class="sub" id="pageSummary"></span>
+        <label class="btn small grow">画像だけ選び直す<input type="file" id="inImg" multiple accept="image/*" hidden></label></div>
+      <p class="sub" id="expPages"></p>
+    </div>
+    <div class="dsec">
+      <div class="dsec-h"><h3>音源（パート別）</h3><button type="button" class="btn small grow" id="btnAddPart">パートを追加</button></div>
+      <div id="partRows"></div>
+      <p class="sub" style="margin-top:8px">全体の音源だけでも使えます。ファイルはこの端末のブラウザに保存され、次回も続きから使えます。</p>
+    </div>
+    <div class="dlg-f"><button type="button" class="btn danger" id="btnReset">保存データを消去</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="dlgJson" hidden>
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="jsonT" tabindex="-1">
+    <div class="dlg-h"><h2 id="jsonT">JSON</h2><button type="button" class="btn small" data-close>閉じる</button></div>
+    <p class="sub" id="jsonDesc" style="margin-bottom:8px"></p>
+    <textarea id="jsonText" spellcheck="false" aria-label="JSON"></textarea>
+    <div class="dlg-f">
+      <label class="btn" id="lblJsonFile">ファイルから読み込む<input type="file" id="inJson" accept=".json,application/json" hidden></label>
+      <button type="button" class="btn primary" id="btnJsonApply">この内容を読み込む</button>
+      <button type="button" class="btn primary" id="btnJsonDownload">ファイルに保存</button>
+      <button type="button" class="btn" id="btnJsonCopy">コピー</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+const $=(s,r=document)=>r.querySelector(s);
+const uid=()=>Math.random().toString(36).slice(2,9);
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const fmtS=t=>{t=Math.max(0,isFinite(t)?t:0);const m=Math.floor(t/60),s=Math.floor(t%60);return m+':'+String(s).padStart(2,'0')};
+const fmtT=t=>{t=Math.max(0,isFinite(t)?t:0);const q=Math.round(t*10),m=Math.floor(q/600),s=(q%600)/10;return m+':'+(s<10?'0':'')+s.toFixed(1)};
+const parseT=v=>{v=String(v).trim().replace('：',':');if(!v)return NaN;if(v.includes(':')){const p=v.split(':');if(p.length>3)return NaN;let t=0;for(const x of p){const n=Number(x);if(!isFinite(n)||n<0)return NaN;t=t*60+n}return t}const n=Number(v);return isFinite(n)&&n>=0?n:NaN};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const DEFAULT_PARTS=()=>[
+  {id:'mix',name:'全体',keys:['mix','all','全体','全パート','混声']},
+  {id:'sop',name:'ソプラノ',keys:['sop','soprano','ソプラノ','女声1']},
+  {id:'alto',name:'アルト',keys:['alto','アルト','女声2']},
+  {id:'male',name:'男声',keys:['male','tenor','bass','men','テノール','バス','男声']}
+];
+const S={title:'',parts:DEFAULT_PARTS(),pages:[],audio:{},pins:[],partId:'mix',speed:1,page:0,zoom:'fit',
+  mode:'practice',follow:true,sectionLoop:false,loopFromPin:false,loop:{a:null,b:null},selPin:null,expected:{pages:[],audio:{}}};
+
+let toastT=0;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),3600)}
+
+/* ---- この端末への保存（IndexedDB） ---- */
+let dbp=null;
+const idbOpen=()=>dbp||(dbp=new Promise((res,rej)=>{const r=indexedDB.open('gassho-navi',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
+const idbGet=async k=>{const d=await idbOpen();return new Promise((res,rej)=>{const q=d.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})};
+const idbSet=async(k,v)=>{const d=await idbOpen();return new Promise((res,rej)=>{const t=d.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=()=>res();t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)})};
+const idbClear=async()=>{const d=await idbOpen();return new Promise((res,rej)=>{const t=d.transaction('kv','readwrite');t.objectStore('kv').clear();t.oncomplete=()=>res();t.onerror=()=>rej(t.error)})};
+let tMeta=0;
+function saveMeta(){clearTimeout(tMeta);tMeta=setTimeout(async()=>{try{await idbSet('meta',{v:1,title:S.title,parts:S.parts,pins:S.pins,partId:S.partId,speed:S.speed,page:S.page,expected:S.expected})}catch(e){}},400)}
+async function saveFiles(){
+  try{await idbSet('files',{pages:S.pages.map(p=>({name:p.name,blob:p.blob,w:p.w,h:p.h})),audio:Object.fromEntries(Object.entries(S.audio).map(([k,v])=>[k,{name:v.name,blob:v.blob}]))})}
+  catch(e){toast('この端末に保存できませんでした。次回は、もう一度ファイルを選んでください。')}
+}
+async function restore(){
+  try{
+    const m=await idbGet('meta');if(!m)return false;
+    const f=(await idbGet('files'))||{pages:[],audio:{}};
+    S.title=m.title||'';
+    if(Array.isArray(m.parts)&&m.parts.length)S.parts=m.parts;
+    S.pins=Array.isArray(m.pins)?m.pins:[];
+    S.partId=m.partId||S.parts[0].id;S.speed=m.speed||1;S.page=m.page||0;
+    S.expected=m.expected||{pages:[],audio:{}};
+    S.pages=(f.pages||[]).map(p=>({...p,url:URL.createObjectURL(p.blob)}));
+    S.audio={};
+    for(const [k,v] of Object.entries(f.audio||{}))S.audio[k]={...v,url:URL.createObjectURL(v.blob)};
+    return true;
+  }catch(e){return false}
+}
+
+/* ---- 並べ替え済みピンと、いま再生中のピン ---- */
+let sorted=[],activeId=null;
+function resort(){sorted=S.pins.slice().sort((a,b)=>a.time-b.time)}
+const colorVar=pid=>{const i=S.parts.findIndex(p=>p.id===pid);return i<0?'var(--pn)':'var(--p'+(i%6)+')'};
+const partName=pid=>{const p=S.parts.find(x=>x.id===pid);return p?p.name:''};
+function updateActive(t,force){
+  let r=null;
+  for(const p of sorted){if(p.time<=t+0.05)r=p;else break}
+  const id=r?r.id:null;
+  if(id===activeId&&!force)return;
+  const changed=id!==activeId;
+  activeId=id;
+  document.querySelectorAll('.is-active').forEach(e=>e.classList.remove('is-active'));
+  if(!r)return;
+  document.querySelectorAll('[data-id="'+r.id+'"]').forEach(e=>e.classList.add('is-active'));
+  if(changed&&S.follow&&S.pages.length){
+    if(r.page!==S.page&&r.page>=0&&r.page<S.pages.length)goPage(r.page);
+    const m=document.querySelector('.pin[data-id="'+r.id+'"]');
+    if(m)m.scrollIntoView({block:'nearest',inline:'nearest',behavior:'smooth'});
+  }
+  const row=document.querySelector('.prow-pin[data-id="'+r.id+'"]');
+  if(row&&changed)row.scrollIntoView({block:'nearest'});
+}
+
+/* ---- 音声 ---- */
+const au=new Audio();
+au.preload='auto';
+au.preservesPitch=true;au.mozPreservesPitch=true;au.webkitPreservesPitch=true;
+let raf=0,seeking=false,loadTok=0;
+function tick(){
+  const t=au.currentTime,b=S.loop.b;
+  if(b!=null&&t>=b)au.currentTime=S.loop.a!=null?S.loop.a:0;
+  updateTime(au.currentTime);
+  raf=requestAnimationFrame(tick);
+}
+function updateTime(t){
+  $('#tcur').textContent=fmtS(t);
+  const d=au.duration;
+  if(isFinite(d)&&d>0&&!seeking)$('#seek').value=Math.round(t/d*1000);
+  updateActive(t);
+}
+function renderPlay(){
+  $('#icoPlay').hidden=!au.paused;$('#icoPause').hidden=au.paused;
+  $('#btnPlay').setAttribute('aria-label',au.paused?'再生':'一時停止');
+}
+function renderTicks(){
+  const box=$('#ticks'),d=au.duration;box.textContent='';
+  if(!isFinite(d)||!d)return;
+  for(const p of S.pins){const i=document.createElement('i');i.style.left=clamp(p.time/d*100,0,100)+'%';i.style.background=colorVar(p.part);box.appendChild(i)}
+}
+function renderLoop(){
+  const {a,b}=S.loop,d=au.duration,bar=$('#loopBar');
+  $('#loopRead').textContent=(a==null&&b==null)?'ループなし':'A '+(a==null?'—':fmtT(a))+'　B '+(b==null?'—':fmtT(b));
+  if(isFinite(d)&&d>0&&(a!=null||b!=null)){
+    const l=(a==null?0:a)/d*100,r=(b==null?d:b)/d*100;
+    bar.style.left=l+'%';bar.style.width=Math.max(0,r-l)+'%';bar.hidden=false;
+  }else bar.hidden=true;
+}
+function seek(t,play){
+  if(!au.dataset.pid){toast('音源が未設定です。「ファイル」から選んでください。');return}
+  const d=au.duration;t=clamp(t,0,isFinite(d)?d:t);
+  try{au.currentTime=t}catch(e){}
+  if(play&&au.paused)au.play().catch(()=>{});
+  updateTime(t);
+}
+function toggle(){
+  if(!au.dataset.pid){toast('音源が未設定です。「ファイル」から選んでください。');return}
+  if(au.paused)au.play().catch(()=>toast('再生できませんでした。もう一度押してください。'));else au.pause();
+}
+function setSpeed(v){
+  S.speed=v;au.defaultPlaybackRate=v;au.playbackRate=v;
+  document.querySelectorAll('#speedBar button').forEach(b=>b.classList.toggle('on',Number(b.dataset.speed)===v));
+  saveMeta();
+}
+function setPart(pid,o={}){
+  const a=S.audio[pid];
+  if(!a){toast('「'+partName(pid)+'」の音源が未設定です。「ファイル」から選んでください。');return}
+  S.partId=pid;
+  if(au.dataset.pid===pid){if(o.at!=null)seek(o.at,o.play);renderParts();saveMeta();return}
+  const t=o.at!=null?o.at:(au.currentTime||0),was=o.play!=null?o.play:!au.paused,tok=++loadTok;
+  au.dataset.pid=pid;au.src=a.url;au.defaultPlaybackRate=S.speed;au.playbackRate=S.speed;
+  const onMeta=()=>{
+    au.removeEventListener('loadedmetadata',onMeta);
+    if(tok!==loadTok)return;
+    au.defaultPlaybackRate=S.speed;au.playbackRate=S.speed;
+    try{au.currentTime=Math.min(t,au.duration||t)}catch(e){}
+    if(was)au.play().catch(()=>{});
+    $('#tdur').textContent=fmtS(au.duration);
+    updateTime(au.currentTime);renderTicks();renderLoop();
+  };
+  au.addEventListener('loadedmetadata',onMeta);
+  renderParts();renderPlay();saveMeta();
+}
+au.addEventListener('play',()=>{renderPlay();cancelAnimationFrame(raf);raf=requestAnimationFrame(tick)});
+au.addEventListener('pause',()=>{renderPlay();cancelAnimationFrame(raf);updateTime(au.currentTime)});
+au.addEventListener('ended',()=>{
+  cancelAnimationFrame(raf);
+  const d=au.duration,{a,b}=S.loop;
+  if(b!=null&&isFinite(d)&&b>=d-0.15){au.currentTime=a!=null?a:0;au.play().catch(()=>{})}
+  renderPlay();
+});
+au.addEventListener('durationchange',()=>{$('#tdur').textContent=fmtS(au.duration);renderTicks();renderLoop()});
+au.addEventListener('error',()=>{if(au.dataset.pid)toast('この音源を再生できません。MP3・M4A・WAVなどの形式か確認してください。')});
+
+/* ---- 画面の描画 ---- */
+function renderParts(){
+  const bar=$('#partBar');bar.textContent='';
+  S.parts.forEach((p,i)=>{
+    const b=document.createElement('button');
+    b.type='button';b.dataset.pid=p.id;
+    b.className='partbtn'+(p.id===S.partId?' on':'')+(S.audio[p.id]?'':' nofile');
+    b.setAttribute('role','radio');b.setAttribute('aria-checked',String(p.id===S.partId));
+    b.style.setProperty('--pc','var(--p'+(i%6)+')');
+    b.title=S.audio[p.id]?S.audio[p.id].name:'音源が未設定です';
+    const d=document.createElement('i');d.className='dot';
+    b.appendChild(d);b.appendChild(document.createTextNode(p.name));
+    bar.appendChild(b);
+  });
+}
+function applyZoom(){
+  const wrap=$('#scroller'),pg=S.pages[S.page];
+  if(!pg)return;
+  const cw=Math.max(200,wrap.clientWidth-24),ch=Math.max(200,wrap.clientHeight-24);
+  const ar=pg.w&&pg.h?pg.w/pg.h:0.707;
+  const fitAll=Math.min(cw,ch*ar);
+  const w=S.zoom==='fit'?fitAll:(S.zoom==='width'?cw:cw*S.zoom);
+  $('#sheet').style.width=Math.round(w)+'px';
+  $('#zLabel').textContent=Math.round(w/cw*100)+'%';
+}
+function zoomBy(f){
+  const wrap=$('#scroller'),cw=Math.max(200,wrap.clientWidth-24),cur=parseInt($('#sheet').style.width,10)/cw||1;
+  S.zoom=clamp(cur*f,0.3,4);applyZoom();
+}
+function renderScore(){
+  const has=S.pages.length>0;
+  $('#sheet').hidden=!has;$('#empty').hidden=has;
+  $('#pageLabel').textContent=has?(S.page+1)+' / '+S.pages.length:'– / –';
+  $('#btnPrev').disabled=!has||S.page<=0;
+  $('#btnNext').disabled=!has||S.page>=S.pages.length-1;
+  if(!has){$('#scoreImg').removeAttribute('src');$('#scoreImg').dataset.url='';return}
+  S.page=clamp(S.page,0,S.pages.length-1);
+  const pg=S.pages[S.page],img=$('#scoreImg');
+  if(img.dataset.url!==pg.url){img.src=pg.url;img.dataset.url=pg.url}
+  applyZoom();renderPins();
+}
+function goPage(i){
+  if(i<0||i>=S.pages.length)return;
+  const moved=i!==S.page;
+  S.page=i;renderScore();
+  if(moved)$('#scroller').scrollTop=0;
+  saveMeta();
+}
+function markerEl(p){
+  const e=document.createElement('button');
+  e.type='button';e.className='pin';e.dataset.id=p.id;
+  e.style.left=p.x+'%';e.style.top=p.y+'%';
+  e.style.setProperty('--pc',colorVar(p.part));
+  e.textContent=p.label||'•';
+  e.title=(p.label||'ピン')+'　'+fmtT(p.time)+(p.part?'　'+partName(p.part):'');
+  if(p.id===activeId)e.classList.add('is-active');
+  if(p.id===S.selPin&&S.mode==='edit')e.classList.add('is-sel');
+  return e;
+}
+function renderPins(){
+  const layer=$('#pinLayer');layer.textContent='';
+  for(const p of S.pins){if(p.page===S.page)layer.appendChild(markerEl(p))}
+}
+function rowView(p){
+  const r=document.createElement('button');
+  r.type='button';r.className='prow-pin';r.dataset.id=p.id;r.dataset.act='go';
+  r.style.setProperty('--pc',colorVar(p.part));
+  r.innerHTML='<i class="dot"></i><span class="pl">'+esc(p.label||'•')+'</span><span class="pt">'+fmtT(p.time)+'</span><span class="pm">'+esc(partName(p.part)||'そのまま')+'　p.'+(p.page+1)+'</span>';
+  if(p.id===activeId)r.classList.add('is-active');
+  return r;
+}
+function rowEdit(p){
+  const r=document.createElement('div');
+  r.className='prow-pin edit';r.dataset.id=p.id;
+  r.style.setProperty('--pc',colorVar(p.part));
+  const opts='<option value="">パート切替なし</option>'+S.parts.map(x=>'<option value="'+esc(x.id)+'"'+(x.id===p.part?' selected':'')+'>'+esc(x.name)+'</option>').join('');
+  r.innerHTML='<i class="dot"></i>'
+    +'<input class="in-label" data-f="label" value="'+esc(p.label)+'" maxlength="12" aria-label="ラベル">'
+    +'<input class="in-time" data-f="time" value="'+fmtT(p.time)+'" aria-label="開始時間">'
+    +'<button type="button" class="mini" data-act="now" title="いまの再生位置にする">今</button>'
+    +'<button type="button" class="mini" data-act="go" title="ここから再生"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 3v18l15-9z"/></svg></button>'
+    +'<select data-f="part" aria-label="対象パート">'+opts+'</select>'
+    +'<span class="pm">p.'+(p.page+1)+'</span>'
+    +'<button type="button" class="mini del" data-act="del" aria-label="このピンを削除">×</button>';
+  if(p.id===activeId)r.classList.add('is-active');
+  if(p.id===S.selPin)r.classList.add('is-sel');
+  return r;
+}
+function renderPinList(){
+  const box=$('#pinList');box.textContent='';
+  $('#pinCount').textContent=S.pins.length?S.pins.length+'件':'';
+  if(!S.pins.length){
+    const e=document.createElement('p');e.className='sub pad';
+    e.textContent=S.mode==='edit'?'まだピンがありません。再生位置を合わせて、楽譜の小節をクリックしてください。':'ピンがありません。「ピン編集」で、小節と再生位置を結びつけます。';
+    box.appendChild(e);return;
+  }
+  for(const p of sorted)box.appendChild(S.mode==='edit'?rowEdit(p):rowView(p));
+}
+function renderSpeed(){document.querySelectorAll('#speedBar button').forEach(b=>b.classList.toggle('on',Number(b.dataset.speed)===S.speed))}
+function renderAll(){
+  renderParts();renderPlay();renderSpeed();renderScore();renderPinList();renderLoop();renderTicks();
+  $('#tdur').textContent=fmtS(au.duration);
+  updateTime(au.currentTime||0);
+}
+
+/* ---- ピンの操作 ---- */
+function addPin(x,y){
+  if(!S.pages.length){toast('先に楽譜を読み込んでください。');return}
+  const p={id:uid(),page:S.page,x:clamp(x,0,100),y:clamp(y,0,100),label:String(S.pins.length+1),time:au.currentTime||0,part:''};
+  S.pins.push(p);S.selPin=p.id;resort();
+  renderPins();renderPinList();renderTicks();updateActive(au.currentTime||0,true);saveMeta();
+}
+function delPin(id){
+  S.pins=S.pins.filter(p=>p.id!==id);
+  if(S.selPin===id)S.selPin=null;
+  if(activeId===id)activeId=null;
+  resort();renderPins();renderPinList();renderTicks();updateActive(au.currentTime||0,true);saveMeta();
+}
+function selectPin(p){
+  S.selPin=p.id;
+  document.querySelectorAll('.is-sel').forEach(e=>e.classList.remove('is-sel'));
+  document.querySelectorAll('[data-id="'+p.id+'"]').forEach(e=>e.classList.add('is-sel'));
+  if(p.page!==S.page&&p.page<S.pages.length){goPage(p.page);document.querySelectorAll('[data-id="'+p.id+'"]').forEach(e=>e.classList.add('is-sel'))}
+}
+function pinGo(p,o={}){
+  const play=o.play!==false;
+  S.selPin=p.id;
+  if(S.sectionLoop){
+    const nxt=sorted.find(q=>q.time>p.time+0.01),d=au.duration;
+    S.loop={a:p.time,b:nxt?nxt.time:(isFinite(d)?d:null)};S.loopFromPin=true;renderLoop();
+  }
+  if(p.page!==S.page&&p.page<S.pages.length)goPage(p.page);
+  if(p.part&&p.part!==S.partId&&S.audio[p.part])setPart(p.part,{at:p.time,play});
+  else seek(p.time,play);
+}
+function nearestGo(x,y){
+  const cand=S.pins.filter(p=>p.page===S.page);
+  if(!cand.length)return;
+  const pg=S.pages[S.page],ar=pg&&pg.w&&pg.h?pg.w/pg.h:0.707;
+  let best=null,bd=1e9;
+  for(const p of cand){const dd=Math.hypot((p.x-x)*ar,p.y-y);if(dd<bd){bd=dd;best=p}}
+  if(best&&bd<22)pinGo(best,{play:true});
+}
+(function bindLayer(){
+  const layer=$('#pinLayer');let drag=null;
+  layer.addEventListener('pointerdown',e=>{
+    const m=e.target.closest('.pin');
+    if(!m||e.button!==0)return;
+    drag={id:m.dataset.id,el:m,sx:e.clientX,sy:e.clientY,moved:false};
+    if(S.mode==='edit'){try{m.setPointerCapture(e.pointerId)}catch(err){}}
+  });
+  layer.addEventListener('pointermove',e=>{
+    if(!drag||S.mode!=='edit')return;
+    if(!drag.moved&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<4)return;
+    drag.moved=true;
+    const p=S.pins.find(x=>x.id===drag.id);if(!p)return;
+    const r=layer.getBoundingClientRect();
+    p.x=clamp((e.clientX-r.left)/r.width*100,0,100);
+    p.y=clamp((e.clientY-r.top)/r.height*100,0,100);
+    drag.el.style.left=p.x+'%';drag.el.style.top=p.y+'%';
+  });
+  layer.addEventListener('pointerup',()=>{
+    if(!drag)return;
+    const d=drag;drag=null;
+    const p=S.pins.find(x=>x.id===d.id);if(!p)return;
+    if(d.moved){saveMeta();return}
+    if(S.mode==='edit'){selectPin(p);seek(p.time,false)}else pinGo(p,{play:true});
+  });
+  layer.addEventListener('pointercancel',()=>{drag=null});
+  layer.addEventListener('click',e=>{
+    if(e.target.closest('.pin'))return;
+    const r=layer.getBoundingClientRect();
+    const x=(e.clientX-r.left)/r.width*100,y=(e.clientY-r.top)/r.height*100;
+    if(S.mode==='edit')addPin(x,y);else nearestGo(x,y);
+  });
+})();
+$('#pinList').addEventListener('click',e=>{
+  const row=e.target.closest('[data-id]');if(!row)return;
+  const p=S.pins.find(x=>x.id===row.dataset.id);if(!p)return;
+  const actEl=e.target.closest('[data-act]'),act=actEl?actEl.dataset.act:'';
+  if(act==='del'){delPin(p.id);return}
+  if(act==='now'){p.time=au.currentTime||0;resort();renderPinList();renderTicks();updateActive(au.currentTime||0,true);saveMeta();return}
+  if(act==='go'){pinGo(p,{play:true});return}
+  if(S.mode==='edit')selectPin(p);
+});
+$('#pinList').addEventListener('change',e=>{
+  const row=e.target.closest('[data-id]'),f=e.target.dataset.f;if(!row||!f)return;
+  const p=S.pins.find(x=>x.id===row.dataset.id);if(!p)return;
+  if(f==='label'){p.label=e.target.value.trim();renderPins()}
+  else if(f==='time'){
+    const t=parseT(e.target.value);
+    if(isNaN(t)){e.target.value=fmtT(p.time);toast('時間は 1:23.5 のように入力してください。');return}
+    p.time=t;resort();renderPinList();renderPins();renderTicks();updateActive(au.currentTime||0,true);
+  }else if(f==='part'){
+    p.part=e.target.value;row.style.setProperty('--pc',colorVar(p.part));renderPins();renderTicks();
+  }
+  saveMeta();
+});
+let clearArm=0;
+$('#btnClearPins').addEventListener('click',e=>{
+  const b=e.currentTarget;
+  if(!clearArm){clearArm=setTimeout(()=>{clearArm=0;b.textContent='すべて削除'},3000);b.textContent='もう一度押すと全削除';return}
+  clearTimeout(clearArm);clearArm=0;b.textContent='すべて削除';
+  S.pins=[];S.selPin=null;activeId=null;resort();renderPins();renderPinList();renderTicks();saveMeta();
+});
+$('#btnAddPin').addEventListener('click',()=>addPin(8,10+(S.pins.filter(p=>p.page===S.page).length*6)%70));
+
+/* ---- ページ・ズーム・モード ---- */
+$('#btnPrev').addEventListener('click',()=>goPage(S.page-1));
+$('#btnNext').addEventListener('click',()=>goPage(S.page+1));
+$('#zFit').addEventListener('click',()=>{S.zoom='fit';applyZoom()});
+$('#zWidth').addEventListener('click',()=>{S.zoom='width';applyZoom()});
+$('#zIn').addEventListener('click',()=>zoomBy(1.2));
+$('#zOut').addEventListener('click',()=>zoomBy(1/1.2));
+if(window.ResizeObserver)new ResizeObserver(()=>applyZoom()).observe($('#scroller'));
+$('#scoreImg').addEventListener('load',()=>applyZoom());
+function setMode(m){
+  S.mode=m;document.body.classList.toggle('mode-edit',m==='edit');
+  $('#modePractice').classList.toggle('on',m==='practice');
+  $('#modeEdit').classList.toggle('on',m==='edit');
+  renderPins();renderPinList();
+}
+$('#modePractice').addEventListener('click',()=>setMode('practice'));
+$('#modeEdit').addEventListener('click',()=>setMode('edit'));
+
+/* ---- 再生コントロール ---- */
+$('#btnPlay').addEventListener('click',toggle);
+$('#btnBack').addEventListener('click',()=>seek((au.currentTime||0)-5,false));
+$('#btnFwd').addEventListener('click',()=>seek((au.currentTime||0)+5,false));
+const seekEl=$('#seek');
+seekEl.addEventListener('pointerdown',()=>{seeking=true});
+window.addEventListener('pointerup',()=>{seeking=false});
+seekEl.addEventListener('input',()=>{const d=au.duration;if(isFinite(d)&&d>0)seek(seekEl.value/1000*d,false)});
+$('#partBar').addEventListener('click',e=>{const b=e.target.closest('.partbtn');if(b)setPart(b.dataset.pid)});
+$('#speedBar').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setSpeed(Number(b.dataset.speed))});
+$('#loopA').addEventListener('click',()=>{
+  const t=au.currentTime||0;S.loop.a=t;
+  if(S.loop.b!=null&&S.loop.b<=t)S.loop.b=null;
+  S.loopFromPin=false;renderLoop();
+});
+$('#loopB').addEventListener('click',()=>{
+  const t=au.currentTime||0,a=S.loop.a!=null?S.loop.a:0;
+  if(t<=a){toast('B は A より後ろの位置にしてください。');return}
+  S.loop.a=a;S.loop.b=t;S.loopFromPin=false;renderLoop();
+});
+$('#loopClear').addEventListener('click',()=>{S.loop={a:null,b:null};S.loopFromPin=false;renderLoop()});
+$('#chkSection').addEventListener('change',e=>{
+  S.sectionLoop=e.target.checked;
+  if(S.sectionLoop){
+    const p=S.pins.find(x=>x.id===activeId);
+    if(p){const nxt=sorted.find(q=>q.time>p.time+0.01),d=au.duration;S.loop={a:p.time,b:nxt?nxt.time:(isFinite(d)?d:null)};S.loopFromPin=true;renderLoop()}
+  }else if(S.loopFromPin){S.loop={a:null,b:null};S.loopFromPin=false;renderLoop()}
+});
+$('#chkFollow').addEventListener('change',e=>{S.follow=e.target.checked});
+$('#songTitle').addEventListener('input',e=>{S.title=e.target.value;saveMeta()});
+
+/* ---- ファイルの読み込み ---- */
+const AUDIO_RE=/\.(mp3|m4a|aac|wav|ogg|oga|flac|opus|weba)$/i,IMG_RE=/\.(png|jpe?g|webp|gif|bmp)$/i;
+const isAudio=f=>(f.type||'').startsWith('audio/')||AUDIO_RE.test(f.name);
+const isImage=f=>(f.type||'').startsWith('image/')||IMG_RE.test(f.name);
+const natCmp=(a,b)=>a.name.localeCompare(b.name,'ja',{numeric:true});
+const loadDims=url=>new Promise(res=>{const i=new Image();i.onload=()=>res({w:i.naturalWidth,h:i.naturalHeight});i.onerror=()=>res({w:0,h:0});i.src=url});
+async function setPages(files){
+  S.pages.forEach(p=>URL.revokeObjectURL(p.url));
+  const pages=[];
+  for(const f of files){const url=URL.createObjectURL(f),d=await loadDims(url);pages.push({name:f.name,blob:f,url,w:d.w,h:d.h})}
+  S.pages=pages;S.page=0;S.expected.pages=pages.map(p=>p.name);
+  $('#scoreImg').dataset.url='';
+}
+function matchPart(f,taken){
+  const name=f.name.toLowerCase();
+  for(const p of S.parts){if(!taken.has(p.id)&&S.expected.audio[p.id]===f.name)return p.id}
+  let best=null,bs=0;
+  for(const p of S.parts){
+    if(taken.has(p.id))continue;
+    const keys=(p.keys||[]).concat([p.name]).map(k=>String(k).toLowerCase()).filter(Boolean);
+    for(const k of keys){if(name.includes(k)&&k.length>bs){bs=k.length;best=p.id}}
+  }
+  if(best)return best;
+  const free=S.parts.find(p=>!taken.has(p.id)&&!S.audio[p.id]);
+  return free?free.id:null;
+}
+function setAudio(pid,file){
+  const old=S.audio[pid];
+  S.audio[pid]={name:file.name,blob:file,url:URL.createObjectURL(file)};
+  S.expected.audio[pid]=file.name;
+  if(au.dataset.pid===pid){au.dataset.pid='';setPart(pid)}
+  else if(!au.dataset.pid)setPart(pid);
+  if(old)URL.revokeObjectURL(old.url);
+}
+async function ingest(fileList){
+  const files=[...fileList];
+  const imgs=files.filter(isImage).sort(natCmp),auds=files.filter(isAudio);
+  if(!imgs.length&&!auds.length){toast('楽譜の画像か、音源のファイルを選んでください。');return}
+  const hadAudio=!!au.dataset.pid;
+  if(imgs.length)await setPages(imgs);
+  const taken=new Set(),miss=[];
+  for(const f of auds){const pid=matchPart(f,taken);if(pid){taken.add(pid);setAudio(pid,f)}else miss.push(f.name)}
+  if(!hadAudio){const first=S.parts.find(p=>S.audio[p.id]);if(first&&au.dataset.pid!==first.id)setPart(first.id)}
+  await saveFiles();saveMeta();
+  renderAll();renderFileDlg();
+  const msg=[];
+  if(imgs.length)msg.push('楽譜 '+imgs.length+'枚');
+  if(auds.length-miss.length>0)msg.push('音源 '+(auds.length-miss.length)+'件');
+  let text=msg.length?msg.join('・')+' を読み込みました。':'';
+  if(miss.length)text+='振り分けられなかった音源: '+miss.join('、')+'（パート名の右の「選ぶ」から設定できます）';
+  toast(text);
+}
+function renderFileDlg(){
+  $('#pageSummary').textContent=S.pages.length?S.pages.length+'枚':'未設定';
+  $('#expPages').textContent=S.pages.length?S.pages.map(p=>p.name).join('、'):(S.expected.pages.length?'JSONに書かれた楽譜: '+S.expected.pages.join('、'):'');
+  const box=$('#partRows');box.textContent='';
+  S.parts.forEach((p,i)=>{
+    const a=S.audio[p.id],exp=S.expected.audio[p.id];
+    const r=document.createElement('div');
+    r.className='prow';r.dataset.pid=p.id;r.style.setProperty('--pc','var(--p'+(i%6)+')');
+    r.innerHTML='<i class="dot"></i><input class="pname" value="'+esc(p.name)+'" maxlength="10" aria-label="パート名">'
+      +'<span class="pstat'+(a?'':' miss')+'">'+(a?esc(a.name):(exp?'未設定（JSONの想定: '+esc(exp)+'）':'未設定'))+'</span>'
+      +'<label class="btn small">選ぶ<input type="file" accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg,.flac" hidden></label>'
+      +'<button type="button" class="mini del" data-act="delpart" aria-label="このパートを削除">×</button>';
+    box.appendChild(r);
+  });
+  $('#btnAddPart').disabled=S.parts.length>=8;
+}
+$('#partRows').addEventListener('input',e=>{
+  if(!e.target.classList.contains('pname'))return;
+  const p=S.parts.find(x=>x.id===e.target.closest('.prow').dataset.pid),v=e.target.value.trim();
+  if(!p||!v)return;
+  p.name=v;renderParts();renderPinList();saveMeta();
+});
+$('#partRows').addEventListener('change',async e=>{
+  if(e.target.type!=='file')return;
+  const f=e.target.files[0],pid=e.target.closest('.prow').dataset.pid;
+  e.target.value='';
+  if(!f)return;
+  if(!isAudio(f)){toast('音声ファイルを選んでください。');return}
+  setAudio(pid,f);
+  await saveFiles();saveMeta();renderAll();renderFileDlg();
+  toast('「'+partName(pid)+'」の音源を設定しました。');
+});
+function deletePart(pid){
+  const a=S.audio[pid],wasCur=au.dataset.pid===pid;
+  S.parts=S.parts.filter(p=>p.id!==pid);
+  delete S.audio[pid];delete S.expected.audio[pid];
+  S.pins.forEach(p=>{if(p.part===pid)p.part=''});
+  if(wasCur){
+    au.dataset.pid='';
+    const nxt=S.parts.find(p=>S.audio[p.id]);
+    if(nxt)setPart(nxt.id);else{au.pause();au.removeAttribute('src');au.load();S.partId=S.parts[0].id}
+  }else if(S.partId===pid)S.partId=S.parts[0].id;
+  if(a)URL.revokeObjectURL(a.url);
+  saveFiles();saveMeta();renderAll();renderFileDlg();
+}
+$('#partRows').addEventListener('click',e=>{
+  const b=e.target.closest('[data-act="delpart"]');if(!b)return;
+  if(S.parts.length<=1){toast('パートは最低1つ必要です。');return}
+  deletePart(b.closest('.prow').dataset.pid);
+});
+$('#btnAddPart').addEventListener('click',()=>{
+  if(S.parts.length>=8)return;
+  S.parts.push({id:uid(),name:'パート'+(S.parts.length+1),keys:[]});
+  saveMeta();renderParts();renderFileDlg();renderPinList();
+});
+async function resetAll(){
+  loadTok++;au.pause();au.dataset.pid='';au.removeAttribute('src');au.load();
+  S.pages.forEach(p=>URL.revokeObjectURL(p.url));
+  Object.values(S.audio).forEach(a=>URL.revokeObjectURL(a.url));
+  Object.assign(S,{title:'',parts:DEFAULT_PARTS(),pages:[],audio:{},pins:[],partId:'mix',page:0,loop:{a:null,b:null},loopFromPin:false,selPin:null,expected:{pages:[],audio:{}}});
+  try{await idbClear()}catch(e){}
+  $('#songTitle').value='';activeId=null;resort();renderAll();renderFileDlg();
+  toast('この端末の保存データを消去しました。');
+}
+let resetArm=0;
+$('#btnReset').addEventListener('click',async e=>{
+  const b=e.currentTarget;
+  if(!resetArm){resetArm=setTimeout(()=>{resetArm=0;b.textContent='保存データを消去'},3000);b.textContent='もう一度押すと消去します';return}
+  clearTimeout(resetArm);resetArm=0;b.textContent='保存データを消去';
+  await resetAll();
+});
+$('#inAll').addEventListener('change',e=>{const fs=[...e.target.files];e.target.value='';ingest(fs)});
+$('#inImg').addEventListener('change',e=>{const fs=[...e.target.files].filter(isImage);e.target.value='';if(fs.length)ingest(fs)});
+const dropZone=$('#dropZone');
+['dragenter','dragover'].forEach(ev=>document.addEventListener(ev,e=>{
+  if(e.dataTransfer&&[...(e.dataTransfer.types||[])].includes('Files')){e.preventDefault();dropZone.classList.add('over')}
+}));
+document.addEventListener('dragleave',e=>{if(!e.relatedTarget)dropZone.classList.remove('over')});
+document.addEventListener('drop',e=>{
+  if(e.dataTransfer&&e.dataTransfer.files.length){e.preventDefault();dropZone.classList.remove('over');ingest(e.dataTransfer.files)}
+});
+
+/* ---- ダイアログ ---- */
+function openDlg(id){
+  if(id==='#dlgFiles')renderFileDlg();
+  const o=$(id);o.hidden=false;
+  o.querySelector('.dlg').focus({preventScroll:true});
+}
+function closeDlg(id){$(id).hidden=true}
+document.querySelectorAll('.overlay').forEach(o=>{
+  o.addEventListener('mousedown',e=>{if(e.target===o)o.hidden=true});
+  o.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>{o.hidden=true}));
+});
+$('#btnFiles').addEventListener('click',()=>openDlg('#dlgFiles'));
+$('#btnEmptyFiles').addEventListener('click',()=>openDlg('#dlgFiles'));
+
+/* ---- JSON ---- */
+let downloadsApi=null;
+try{if(window.claude&&typeof window.claude.use==='function')window.claude.use('downloads').then(a=>{downloadsApi=a||null}).catch(()=>{})}catch(e){}
+const standalone=!(window.claude&&typeof window.claude.use==='function');
+function buildJSON(){
+  return JSON.stringify({
+    app:'gassho-renshu-navi',version:1,title:S.title,
+    parts:S.parts.map(p=>({id:p.id,name:p.name,keys:p.keys||[],file:(S.audio[p.id]&&S.audio[p.id].name)||S.expected.audio[p.id]||''})),
+    pages:S.pages.length?S.pages.map(p=>p.name):S.expected.pages,
+    pins:S.pins.map(p=>({page:p.page,x:+p.x.toFixed(2),y:+p.y.toFixed(2),label:p.label,time:+p.time.toFixed(2),part:p.part||''}))
+  },null,2);
+}
+function openJson(mode){
+  const save=mode==='save';
+  $('#jsonT').textContent=save?'JSON保存':'JSON読込';
+  $('#jsonDesc').textContent=save
+    ?'ピンの位置・時間・パート設定と、ファイル名の一覧です。楽譜画像と音源のファイルは含まれないので、配るときはJSONと一緒に渡してください。'
+    :'JSONファイルを選ぶか、内容を貼り付けて読み込みます。いまのピンは置き換わります。';
+  const ta=$('#jsonText');ta.value=save?buildJSON():'';ta.readOnly=save;
+  $('#lblJsonFile').hidden=save;$('#btnJsonApply').hidden=save;
+  $('#btnJsonDownload').hidden=!save||!(downloadsApi||standalone);$('#btnJsonCopy').hidden=!save;
+  openDlg('#dlgJson');
+}
+function applyJSON(text){
+  let d;
+  try{d=JSON.parse(text)}catch(e){toast('JSONとして読み取れませんでした。内容を確認してください。');return false}
+  if(!d||typeof d!=='object'||!Array.isArray(d.pins)){toast('このファイルには、ピンの情報が見つかりません。');return false}
+  if(Array.isArray(d.parts)&&d.parts.length){
+    const src=d.parts.slice(0,8),seen=new Set();
+    const next=src.map((p,i)=>{
+      p=p||{};let id=String(p.id||uid());while(seen.has(id))id=uid();seen.add(id);
+      return {id,name:String(p.name||'パート'+(i+1)).slice(0,10),keys:Array.isArray(p.keys)?p.keys.map(String).slice(0,10):[]};
+    });
+    const keep={};
+    for(const [k,v] of Object.entries(S.audio)){if(seen.has(k))keep[k]=v;else URL.revokeObjectURL(v.url)}
+    S.parts=next;S.audio=keep;S.expected.audio={};
+    src.forEach((p,i)=>{if(p&&p.file)S.expected.audio[next[i].id]=String(p.file)});
+    const cur=au.dataset.pid;
+    if(cur&&!S.audio[cur]){
+      au.dataset.pid='';
+      const n=S.parts.find(p=>S.audio[p.id]);
+      if(n)setPart(n.id);else{au.pause();au.removeAttribute('src');au.load()}
+    }
+  }
+  const ids=new Set(S.parts.map(p=>p.id));
+  S.pins=d.pins.slice(0,500).map((p,i)=>({id:uid(),page:Math.max(0,parseInt(p.page,10)||0),x:clamp(Number(p.x)||0,0,100),y:clamp(Number(p.y)||0,0,100),label:String(p.label==null?i+1:p.label).slice(0,12),time:Math.max(0,Number(p.time)||0),part:ids.has(p.part)?p.part:''}));
+  if(Array.isArray(d.pages))S.expected.pages=d.pages.map(String).slice(0,200);
+  if(typeof d.title==='string')S.title=d.title.slice(0,60);
+  $('#songTitle').value=S.title;
+  if(!ids.has(S.partId))S.partId=S.parts[0].id;
+  S.selPin=null;activeId=null;S.loop={a:null,b:null};S.loopFromPin=false;
+  resort();saveMeta();saveFiles();renderAll();renderFileDlg();
+  closeDlg('#dlgJson');
+  const needFiles=!S.pages.length||!Object.keys(S.audio).length;
+  let note='読み込みました（ピン '+S.pins.length+'件）。';
+  if(S.pages.length&&Array.isArray(d.pages)&&d.pages.length!==S.pages.length)note+='楽譜の枚数がJSONと違います。';
+  if(needFiles){note+='続けて楽譜と音源を選んでください。';openDlg('#dlgFiles')}
+  toast(note);
+  return true;
+}
+$('#btnJsonSave').addEventListener('click',()=>openJson('save'));
+$('#btnJsonLoad').addEventListener('click',()=>openJson('load'));
+$('#btnJsonApply').addEventListener('click',()=>{applyJSON($('#jsonText').value)});
+$('#inJson').addEventListener('change',async e=>{
+  const f=e.target.files[0];e.target.value='';
+  if(!f)return;
+  try{applyJSON(await f.text())}catch(err){toast('ファイルを読み取れませんでした。')}
+});
+$('#btnJsonCopy').addEventListener('click',async()=>{
+  const ta=$('#jsonText');
+  try{await navigator.clipboard.writeText(ta.value);toast('コピーしました。')}
+  catch(e){ta.focus();ta.select();toast('選択しました。Ctrl+C でコピーしてください。')}
+});
+$('#btnJsonDownload').addEventListener('click',async()=>{
+  if(!downloadsApi){
+    if(!standalone)return;
+    const nm=(S.title||'合唱練習').replace(/[^\p{L}\p{N}_-]/gu,'_').slice(0,40);
+    try{
+      const u=URL.createObjectURL(new Blob([$('#jsonText').value],{type:'application/json'}));
+      const a=document.createElement('a');a.href=u;a.download=nm+'.json';document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(u),2000);toast('保存しました。');
+    }catch(err){toast('保存できませんでした。「コピー」で内容を貼り付けて保存してください。')}
+    return;
+  }
+  const base=(S.title||'合唱練習').replace(/[\\/:*?"<>|]/g,'_').slice(0,40);
+  try{await downloadsApi.save({filename:base+'.json',data:$('#jsonText').value});toast('保存しました。')}
+  catch(err){if(!err||err.code!=='declined')toast('保存できませんでした。「コピー」で内容を貼り付けて保存してください。')}
+});
+
+/* ---- 全画面の練習モード・キーボード ---- */
+async function enterFocus(){
+  setMode('practice');
+  document.body.classList.add('focus');
+  try{await document.documentElement.requestFullscreen()}catch(e){}
+  applyZoom();
+}
+function exitFocus(){
+  document.body.classList.remove('focus');
+  if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});
+  applyZoom();
+}
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement){document.body.classList.remove('focus');applyZoom()}});
+$('#btnFocus').addEventListener('click',enterFocus);
+$('#btnExitFocus').addEventListener('click',exitFocus);
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(b&&e.detail>0)b.blur()});
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  if(e.key==='Escape'){
+    const open=[...document.querySelectorAll('.overlay')].find(o=>!o.hidden);
+    if(open){open.hidden=true;return}
+    if(document.body.classList.contains('focus'))exitFocus();
+    return;
+  }
+  if(document.querySelector('.overlay:not([hidden])'))return;
+  const tg=e.target,tag=tg.tagName;
+  if(tag==='TEXTAREA'||tag==='SELECT'||(tag==='INPUT'&&tg.type!=='range'))return;
+  if(e.key===' '){
+    if(tag==='BUTTON')return;
+    e.preventDefault();toggle();
+  }else if(e.key==='ArrowLeft'||e.key==='ArrowRight'){
+    if(tg.type==='range')return;
+    e.preventDefault();seek((au.currentTime||0)+(e.key==='ArrowLeft'?-5:5),false);
+  }else if(e.key==='['){goPage(S.page-1)}
+  else if(e.key===']'){goPage(S.page+1)}
+  else if(e.key.length===1&&'1234'.includes(e.key)){setSpeed([0.5,0.75,1,1.25][Number(e.key)-1])}
+});
+
+/* ---- 起動 ---- */
+async function init(){
+  setMode('practice');
+  const ok=await restore();
+  $('#songTitle').value=S.title;
+  resort();
+  au.defaultPlaybackRate=S.speed;au.playbackRate=S.speed;
+  if(ok){
+    const pid=S.audio[S.partId]?S.partId:(S.parts.find(p=>S.audio[p.id])||{}).id;
+    if(pid)setPart(pid);
+  }
+  renderAll();
+}
+init();
+})();
+</script>
+</body>
+</html>
